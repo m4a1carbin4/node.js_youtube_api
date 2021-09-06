@@ -10,13 +10,42 @@ const client = new Twitter({
     access_token_secret: Twitter_key.access_token_secret 
 });
 
-const update = (status, media_ids,in_reply_to_status_id = null) =>
+const update = (status, in_reply_to_status_id = null) =>
   client.post('statuses/update', {
     status,
-    media_ids,
     in_reply_to_status_id,
     username: '@2gyUDIVF2t9poyA',
   })
+
+var tweet_make = (tweet1,tweet2)=>{
+    update(tweet1)
+            .then(tweet => {
+
+                console.log("tweet #1 ==>",tweet);
+                return update(tweet2,tweet.id_str);
+
+            })
+            .catch(error => console.log(`error ==>`, error));
+}
+
+var update_list = (callback)=>{
+
+    var count = videoId_list.length;
+
+    for(var i =0;i<count;i++){
+
+        var tweet_1 = string_list.pop();
+
+        var tweet_2 =  "https://youtu.be/"+videoId_list.pop()+"\n "+ tweet_1;
+
+        setTimeout(() => {
+
+            callback(tweet_1,tweet_2);
+
+        }, 2000);
+    }
+    
+}
 
 const youtube = new YouTube();
 
@@ -37,21 +66,20 @@ const pageToken = [
 ]
 
 var videoId_list = new Array();
+var string_list = new Array();
 /*
 youtube.setNextPageToken('EAEaBlBUOkNESQ');
 
-youtube.getPlayListsItemsById(playlistId,50,(err,response) => {
+youtube.getPlayListsItemsById(playlistId,1,(err,response) => {
     if(err) console.log(err);
     var data = response;
     var items = data['items'][0];
-    console.log(items['snippet']['resourceId']['videoId']);
-    console.log(data);
+    console.log(items);
 });
 */
 
 
-
-var item_get = (count,token)=>{
+var item_get = (count,token,callback)=>{
 
     if(token != null){
         youtube.setNextPageToken(token);
@@ -67,7 +95,7 @@ var item_get = (count,token)=>{
 
         for(var i = 0;i<20&&i<count;i++){
             videoId_list.push(data['items'][i]['snippet']['resourceId']['videoId']);
-
+            string_list.push(" #GZzcliptag \n"+data['items'][i]['snippet']['title']+'\n'+"강클립 영상 트윗.");
             console.log(data['items'][i]['snippet']['resourceId']['videoId']);
         }
 
@@ -81,9 +109,14 @@ var item_get = (count,token)=>{
             
         }else{
             console.log('finished : ',videoId_list);
+            console.log('finished : ',string_list);
+
+            update_list(tweet_make);
+            
         }
 
     });
 }
 
-item_get(null,null);
+item_get(null,null,update_list);
+
